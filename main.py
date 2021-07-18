@@ -89,7 +89,7 @@ for entries in range(len(bib_database.entries)):
         continue
 
     # giving user status feedback
-    print("Paper %i of %i" % (entries, len(bib_database.entries)))
+    print(f'Paper {entries} of {len(bib_database.entries)}')
 
     # another paper is added 
     counter_connected_papers += 1
@@ -122,7 +122,7 @@ for entries in range(len(bib_database.entries)):
 
 
 # %% Clean Data by deleting uninteresting papers (less often cited/ referenced papers)
-print(len(all_papers))
+
 # delete all new papers with a number of occurence that lies in the 90%-quantile  
 delete_papers = all_papers[(all_papers['occurence'] <= all_papers['occurence'].quantile(0.95)) & (all_papers['member'] == "new")]
 
@@ -145,9 +145,9 @@ all_papers.loc[all_papers['paperID'].isin(new_paper['paperID']), 'member'] = 're
 
 
 # %% User feedback
-print('%i of %i papers from bibtex-file were added to graph. \n' % (counter_connected_papers, len(bib_database.entries)))
-print('%i of %i extracted papers (cited and referenced) are shown in graph. \n' % (len(all_papers), len(all_papers)+len(delete_papers)))
-print('The following %i papers might be of interest: \n' % (len(new_paper)))
+print(f'{counter_connected_papers} of {len(bib_database.entries)} papers from bibtex-file were added to graph. \n') 
+print(f'{len(all_papers)} of {len(all_papers)+len(delete_papers)} extracted papers (cited and referenced) are shown in graph. \n')
+print(f'The following {len(new_paper)} papers might be of interest: \n')
 
 
 papers = []
