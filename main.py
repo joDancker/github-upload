@@ -1,17 +1,14 @@
 import bibtexparser
+import matplotlib.pyplot as plt
+# plotting libraries
+import networkx as nx
+import numpy as np
+import pandas as pd
+import requests
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
 from pandas.core.frame import DataFrame
-
-import requests
-import numpy as np
-import pandas as pd
-
-# plotting libraries
-import networkx as nx
-import matplotlib.pyplot as plt
-
 
 # %% Nested Functions
 
