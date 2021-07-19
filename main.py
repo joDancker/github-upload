@@ -1,6 +1,5 @@
 import bibtexparser
 import matplotlib.pyplot as plt
-# plotting libraries
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -99,7 +98,7 @@ for entries in range(len(bib_database.entries)):
         continue
 
     # giving user status feedback
-    print("Paper %i of %i" % (entries, len(bib_database.entries)))
+    print(f"Paper {entries} of {len(bib_database.entries)}")
 
     # another paper is added
     counter_connected_papers += 1
@@ -175,14 +174,14 @@ all_papers.loc[
 
 # %% User feedback
 print(
-    "%i of %i papers from bibtex-file were added to graph. \n"
-    % (counter_connected_papers, len(bib_database.entries))
+    f"{counter_connected_papers} of {len(bib_database.entries)}"
+    "papers from bibtex-file were added to graph. \n"
 )
 print(
-    "%i of %i extracted papers (cited and referenced) are shown in graph. \n"
-    % (len(all_papers), len(all_papers) + len(delete_papers))
+    f"{len(all_papers)} of {len(all_papers)+len(delete_papers)}"
+    "extracted papers (cited and referenced) are shown in graph. \n"
 )
-print("The following %i papers might be of interest: \n" % (len(new_paper)))
+print(f"The following {len(new_paper)} papers might be of interest: \n")
 
 
 papers = []
