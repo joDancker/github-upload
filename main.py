@@ -282,7 +282,7 @@ nx.draw_networkx_labels(G, position, labels, font_size=12)
 ax.legend()
 
 # save plot
-fname = "paper connections.png"
+fname = "paper_connections.png"
 overwrite = False
 if not os.path.exists(fname) or overwrite:
     fig.savefig(fname)
