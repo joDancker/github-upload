@@ -203,12 +203,10 @@ recommended_papers["title"] = new_paper["title"].values
 print(recommended_papers)
 
 # save list of recommended papers
-fname = "paper recommended_papers.csv"
+fname = "recommended_papers.csv"
 overwrite = False
 if not os.path.exists(fname) or overwrite:
-    recommended_papers.to_csv(
-        "recommended_papers.csv", index=False, float_format="%.2f"
-    )
+    recommended_papers.to_csv(fname, index=False, float_format="%.2f")
 else:
     warnings.warn(
         f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
