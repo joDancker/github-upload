@@ -298,6 +298,7 @@ nx.draw(
 
 # identfiy papers in plot by name of first author and year of publication
 paper_identifier = []
+all_papers["year"] = all_papers["year"].fillna(0)
 for i in range(len(all_papers)):
     # extract all author names from each paper
     author_names = [x["name"] for x in all_papers.loc[all_papers.index[i], "authors"]]
