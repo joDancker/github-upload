@@ -6,4 +6,11 @@ The project extracts the papers of your bibliograhpy and gets their metadata (ID
 
 As the number of papers increases quickly, only the papers in your own bibliography are show and the papers which have the most links (currently the topmost 10 %). With this the graph is cleaned as much as possbile without missing to much information.
 
-Finally, recommendations on possibly interesting papers are given. For this, the papers which are not included in your own bibliography but have the most links (currently the topmost 10 % as well) are pointed out for you to read.
+Finally, recommendations on possibly interesting papers are given. For this, the papers which are not included in your own bibliography but have the most links (currently the topmost 10 % as well) are pointed out for you to read. 
+
+# Installation
+
+The code requires Python version 3.8 or higher to run properly. I recommend to run the code in a dedicated virtual environment (for example using [conda](https://docs.conda.io/en/latest/miniconda.html)).
+
+For installing the needed libraries, run:
+`pip install -r requirements.txt`
