@@ -269,10 +269,10 @@ labels = dict(zip(all_papers["paperID"], node_labels))
 nx.draw_networkx_labels(G, position, labels, font_size=12)
 
 # plot legend
-plt.legend()
+ax.legend()
 
 # save plot
-plt.savefig("paper connections.png")
+f.savefig('paper connections.png')
 
 # show plot
 plt.show()
