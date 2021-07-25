@@ -232,8 +232,7 @@ condition = [(all_papers["member"] == "owned"), (all_papers["member"] == "recomm
 node_colors = np.select(condition, colors[1:], default=colors[0])
 
 # Using a figure to use it as a parameter when calling nx.draw_networkx
-fig = plt.figure(1)
-ax = fig.add_subplot(1, 1, 1)
+fig, ax = plt.subplots()
 for label in ColorLegend:
     ax.plot([0], [0], color=colors[ColorLegend[label]], label=label)
 
