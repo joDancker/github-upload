@@ -1,4 +1,5 @@
 import os
+import time
 import warnings
 
 import bibtexparser
@@ -13,6 +14,39 @@ from bibtexparser.customization import homogenize_latex_encoding
 from pandas.core.frame import DataFrame
 
 # %% Nested Functions
+
+# function accessing sematic scholar API repeatedly with a time delay
+def access_API(url):
+    retries = 0
+    timeout = 5
+    while retries < 10:
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            return resp
+        elif resp.status_code == 403 and retries == 0:
+            # Check if server does not allow download on the first try
+            user_input = input(
+                "You exceeded 100 requests per 5 minute window. "
+                "Do you want to wait (w) or exit (e)?: "
+            )
+            # if user wants to exit reading
+            if user_input == "e":
+                return None
+            else:
+                print(f"Sleeping for {timeout} seconds")
+                time.sleep(timeout)
+                retries += 1
+
+        elif resp.status_code == 403:
+            print(f"Access denied. Sleeping for another {timeout} seconds")
+            time.sleep(timeout)
+            retries += 1
+        # If something else went wrong.
+        else:
+            print("Paper was not found in database")
+            return resp
+    return resp
+
 
 # function extracting needed key values from literature data
 def get_literature_keys(literature, member):
@@ -88,16 +122,21 @@ counter_connected_papers = 0
 for entries in range(len(bib_database.entries)):
 
     if not "doi" in bib_database.entries[entries]:  # IF entry does not have DOI
+        print("No DOI available")
         continue
 
     # get DOI from Literature
     DOI = as_text(bib_database.entries[entries]["doi"])
 
     # get json-file of literature via DOI
-    resp = requests.get("https://api.semanticscholar.org/v1/paper/" + DOI)
+    resp = access_API("https://api.semanticscholar.org/v1/paper/" + DOI)
+
+    # If user wants to exit after server is not allowing download break whole download loop
+    if resp == None:
+        break
+
+    # If something else went wrong.
     if resp.status_code != 200:
-        # This means something went wrong.
-        KeyboardInterrupt
         continue
 
     # giving user status feedback
