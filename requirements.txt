@@ -1,0 +1,9 @@
+bibtexparser
+black
+isort
+matplotlib
+networkx
+pandas
+pre-commit
+requests
+scipy
