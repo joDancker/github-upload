@@ -1,3 +1,6 @@
+import os
+import warnings
+
 import bibtexparser
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -200,7 +203,17 @@ recommended_papers["title"] = new_paper["title"].values
 print(recommended_papers)
 
 # save list of recommended papers
-recommended_papers.to_csv("recommended_papers.csv", index=False, float_format="%.2f")
+fname = "paper recommended_papers.csv"
+overwrite = False
+if not os.path.exists(fname) or overwrite:
+    recommended_papers.to_csv(
+        "recommended_papers.csv", index=False, float_format="%.2f"
+    )
+else:
+    warnings.warn(
+        f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
+    )
+
 
 # %% PLOTTING
 # Create graph
@@ -221,8 +234,8 @@ condition = [(all_papers["member"] == "owned"), (all_papers["member"] == "recomm
 node_colors = np.select(condition, colors[1:], default=colors[0])
 
 # Using a figure to use it as a parameter when calling nx.draw_networkx
-f = plt.figure(1)
-ax = f.add_subplot(1, 1, 1)
+fig = plt.figure(1)
+ax = fig.add_subplot(1, 1, 1)
 for label in ColorLegend:
     ax.plot([0], [0], color=colors[ColorLegend[label]], label=label)
 
@@ -272,7 +285,14 @@ nx.draw_networkx_labels(G, position, labels, font_size=12)
 ax.legend()
 
 # save plot
-f.savefig('paper connections.png')
+fname = "paper connections.png"
+overwrite = False
+if not os.path.exists(fname) or overwrite:
+    fig.savefig(fname)
+else:
+    warnings.warn(
+        f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
+    )
 
 # show plot
 plt.show()
