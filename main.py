@@ -132,7 +132,7 @@ for entries in range(len(bib_database.entries)):
     resp = access_API("https://api.semanticscholar.org/v1/paper/" + DOI)
 
     # If user wants to exit after server is not allowing download break whole download loop
-    if resp == None:
+    if resp is None:
         break
 
     # If something else went wrong.
