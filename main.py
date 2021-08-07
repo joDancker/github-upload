@@ -1,3 +1,17 @@
+"""Provide functions and workflow for analyzing dependencies between scientific bibliographies.
+
+This project gives you recommendations of which scientific papers might be
+of interest for you based on your own scientific bibliography. The idea standing behind
+the recommendations is simple. The more often a paper is cited, the more 
+important it should be for your field of research. 
+
+MIT license
+
+List of author(s)
+Jonte Dancker
+
+"""
+
 import os
 import warnings
 
