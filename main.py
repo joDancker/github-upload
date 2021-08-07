@@ -27,86 +27,9 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
 from pandas.core.frame import DataFrame
 
-# %% Nested Functions
+from utils import add_literature, get_literature_keys
 
-# function accessing sematic scholar API repeatedly with a time delay
-def access_API(url):
-    retries = 0
-    timeout = 5
-    while retries < 10:
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            return resp
-        elif resp.status_code == 403 and retries == 0:
-            # Check if server does not allow download on the first try
-            user_input = input(
-                "You exceeded 100 requests per 5 minute window. "
-                "Do you want to wait (w) or exit (e)?: "
-            )
-            # if user wants to exit reading
-            if user_input == "e":
-                return None
-            else:
-                print(f"Sleeping for {timeout} seconds")
-                time.sleep(timeout)
-                retries += 1
-
-        elif resp.status_code == 403:
-            print(f"Access denied. Sleeping for another {timeout} seconds")
-            time.sleep(timeout)
-            retries += 1
-        # If something else went wrong.
-        else:
-            print("Paper was not found in database")
-            return resp
-    return resp
-
-
-# function extracting needed key values from literature data
-def get_literature_keys(literature, member):
-    data = pd.DataFrame(
-        {
-            "paperID": literature["paperId"],
-            "authors": [literature["authors"]],
-            "year": literature["year"],
-            "doi": literature["doi"],
-            "title": literature["title"],
-            "occurence": 1,
-        }
-    )
-
-    # add category to paper
-    raw_cat = pd.Categorical(
-        member, categories=["owned", "new", "recommended"], ordered=False
-    )
-    data["member"] = raw_cat
-
-    return data
-
-
-# function extracting needed key values from literature data
-def add_literature(all_papers, relationships, newPaper):
-    # add relationship between available and referenced paper
-    relation = {
-        "from": availablePaper.loc[0, "paperID"],
-        "to": newPaper.loc[0, "paperID"],
-    }
-    relationships = relationships.append(relation, ignore_index=True)
-
-    # add referenced paper to all papers
-    if any(
-        all_papers["paperID"].isin(newPaper["paperID"])
-    ):  # IF referenced paper is already saved
-        # count occurence of paper up by 1
-        all_papers.loc[
-            all_papers["paperID"] == newPaper.loc[0, "paperID"], "occurence"
-        ] += 1
-    else:
-        # add referenced paper to all papers
-        all_papers = pd.concat([all_papers, newPaper], ignore_index=True)
-
-    return all_papers, relationships
-
+# %%
 
 # read data from bib-file
 with open("literature.bib") as bibtex_file:
@@ -182,7 +105,7 @@ for entries in range(len(bib_database.entries)):
     for ref in range(len(resp.json()["references"])):
         referencedPaper = get_literature_keys(resp.json()["references"][ref], "new")
         all_papers, relationships = add_literature(
-            all_papers, relationships, referencedPaper
+            all_papers, relationships, availablePaper, referencedPaper
         )
 
     # loop through cited literature and get key values
@@ -190,7 +113,7 @@ for entries in range(len(bib_database.entries)):
     for ref in range(len(resp.json()["citations"])):
         cited_papers = get_literature_keys(resp.json()["citations"][ref], "new")
         all_papers, relationships = add_literature(
-            all_papers, relationships, cited_papers
+            all_papers, relationships, availablePaper, cited_papers
         )
 
 
