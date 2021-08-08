@@ -46,7 +46,7 @@ def get_literature_keys(literature, member):
 def add_literature(all_papers, relationships, current_paper, newPaper):
     """Add new literature data and relationship to existing literature data.
 
-    This method adds new papers to the existing, already saved, papers and also adds the
+    This function adds new papers to the existing, already saved, papers and also adds the
     relationsship between new papers and the paper extracted from the bibtex-file. If the
     new paper is already part of `all_papers` the paper is not added but its occurence is
     counted up by 1.
