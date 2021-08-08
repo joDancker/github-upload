@@ -25,7 +25,6 @@ import requests
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
-from pandas.core.frame import DataFrame
 
 from utils import add_literature, get_literature_keys
 
@@ -58,8 +57,7 @@ counter_connected_papers = 0
 # Save author, year, title and doi in dict-variable
 for entries in range(len(bib_database.entries)):
 
-    if not "doi" in bib_database.entries[entries]:  # IF entry does not have DOI
-        print("No DOI available")
+    if "doi" not in bib_database.entries[entries]:  # IF entry does not have DOI
         continue
 
     # get DOI from Literature
@@ -138,8 +136,9 @@ relationships = relationships.drop(idx_delete_papers)
 
 
 # %% identify new papers of possible interest
-# interesting papers are identified by their number of occurences. The more often a paper is cited the better is
-# must be and the higher its impact on the field can be assumed
+# interesting papers are identified by their number of occurences. The more often a
+# paper is cited the better is must be and the higher its impact on the field can be
+# assumed.
 new_paper = all_papers[
     (all_papers["occurence"] >= all_papers["occurence"].quantile(0.9))
     & (all_papers["member"] == "new")
