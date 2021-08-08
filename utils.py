@@ -10,7 +10,7 @@ def get_literature_keys(literature, member):
     ----------
     literature : dict
         contains all information about a paper extracted for semantic scholar.
-    member : string
+    member : str
         identifies the membership of a paper. Can be "owned" if paper is part of the
         bibtex-file, "new" if paper is not part of the bibtex-file or "recommendend" if a
         "new" paper might be of interest for the reader.
@@ -18,7 +18,7 @@ def get_literature_keys(literature, member):
 
     Returns
     -------
-     data : dataframe
+    data : pd.dataframe
         contains needed key values of the paper
 
     """
@@ -53,23 +53,23 @@ def add_literature(all_papers, relationships, current_paper, newPaper):
 
     Parameters
     ----------
-    all_papers : dataframe
+    all_papers : pd.dataframe
         contains information about all papers which were either part of the bibtex-file or
         were already downloaded from semanitc scholar, including paperID, authors, DOI,
         title, number of occurences
-    relationships : dataframe
+    relationships : pd.dataframe
         contains information on how the papers in `all_papers` are related to each other.
-    current_paper : dataframe
+    current_paper : pd.dataframe
         contains information about the current paper from the bibtex-file
-    newPaper : dataframe
+    newPaper : pd.dataframe
         contains information about the paper which is related to `current_paper`
 
     Returns
     -------
-     all_papers : dataframe
+     all_papers : pd.dataframe
         contains updated information about all papers. The return value contains the
         additional information of `newPaper`
-    relationships : dataframe
+    relationships : pd.dataframe
         contains updated information on how the papers in `all_papers` are related to each
         other including the additional information of `newPaper`
 
