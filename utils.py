@@ -1,3 +1,5 @@
+"""Utility functions for the scientific-paper-dependencies project."""
+
 import pandas as pd
 
 
