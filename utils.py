@@ -6,8 +6,6 @@ import pandas as pd
 def get_literature_keys(literature, member):
     """Extract needed key values from literature data.
 
-    This method extracts the needed key values
-
     Parameters
     ----------
     literature : dict
