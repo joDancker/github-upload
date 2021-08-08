@@ -23,4 +23,4 @@ repos:
     rev: '37d62d2'  # pick a git hash / tag to point to
     hooks:
     -   id: flake8
-    additional_dependencies: [flake8-docstrings]
+        additional_dependencies: [flake8-docstrings]
