@@ -1,9 +1,9 @@
-"""Provide functions and workflow for analyzing dependencies between scientific bibliographies.
+"""Functions and workflow for analyzing dependencies between scientific bibliographies.
 
 This project gives you recommendations of which scientific papers might be
 of interest for you based on your own scientific bibliography. The idea standing behind
-the recommendations is simple. The more often a paper is cited, the more 
-important it should be for your field of research. 
+the recommendations is simple. The more often a paper is cited, the more
+important it should be for your field of research.
 
 MIT license
 
@@ -13,7 +13,6 @@ Jonte Dancker
 """
 
 import os
-import time
 import warnings
 
 import bibtexparser
@@ -21,92 +20,13 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-import requests
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
-from pandas.core.frame import DataFrame
 
-# %% Nested Functions
+from utils import access_API, add_literature, get_literature_keys
 
-# function accessing sematic scholar API repeatedly with a time delay
-def access_API(url):
-    retries = 0
-    timeout = 5
-    while retries < 10:
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            return resp
-        elif resp.status_code == 403 and retries == 0:
-            # Check if server does not allow download on the first try
-            user_input = input(
-                "You exceeded 100 requests per 5 minute window. "
-                "Do you want to wait (w) or exit (e)?: "
-            )
-            # if user wants to exit reading
-            if user_input == "e":
-                return None
-            else:
-                print(f"Sleeping for {timeout} seconds")
-                time.sleep(timeout)
-                retries += 1
-
-        elif resp.status_code == 403:
-            print(f"Access denied. Sleeping for another {timeout} seconds")
-            time.sleep(timeout)
-            retries += 1
-        # If something else went wrong.
-        else:
-            print("Paper was not found in database")
-            return resp
-    return resp
-
-
-# function extracting needed key values from literature data
-def get_literature_keys(literature, member):
-    data = pd.DataFrame(
-        {
-            "paperID": literature["paperId"],
-            "authors": [literature["authors"]],
-            "year": literature["year"],
-            "doi": literature["doi"],
-            "title": literature["title"],
-            "occurence": 1,
-        }
-    )
-
-    # add category to paper
-    raw_cat = pd.Categorical(
-        member, categories=["owned", "new", "recommended"], ordered=False
-    )
-    data["member"] = raw_cat
-
-    return data
-
-
-# function extracting needed key values from literature data
-def add_literature(all_papers, relationships, newPaper):
-    # add relationship between available and referenced paper
-    relation = {
-        "from": availablePaper.loc[0, "paperID"],
-        "to": newPaper.loc[0, "paperID"],
-    }
-    relationships = relationships.append(relation, ignore_index=True)
-
-    # add referenced paper to all papers
-    if any(
-        all_papers["paperID"].isin(newPaper["paperID"])
-    ):  # IF referenced paper is already saved
-        # count occurence of paper up by 1
-        all_papers.loc[
-            all_papers["paperID"] == newPaper.loc[0, "paperID"], "occurence"
-        ] += 1
-    else:
-        # add referenced paper to all papers
-        all_papers = pd.concat([all_papers, newPaper], ignore_index=True)
-
-    return all_papers, relationships
-
+# %%
 
 # read data from bib-file
 with open("literature.bib") as bibtex_file:
@@ -135,8 +55,7 @@ counter_connected_papers = 0
 # Save author, year, title and doi in dict-variable
 for entries in range(len(bib_database.entries)):
 
-    if not "doi" in bib_database.entries[entries]:  # IF entry does not have DOI
-        print("No DOI available")
+    if "doi" not in bib_database.entries[entries]:  # IF entry does not have DOI
         continue
 
     # get DOI from Literature
@@ -145,7 +64,8 @@ for entries in range(len(bib_database.entries)):
     # get json-file of literature via DOI
     resp = access_API("https://api.semanticscholar.org/v1/paper/" + DOI)
 
-    # If user wants to exit after server is not allowing download break whole download loop
+    # If user wants to exit after server is not allowing download break
+    # whole download loop
     if resp is None:
         break
 
@@ -182,7 +102,7 @@ for entries in range(len(bib_database.entries)):
     for ref in range(len(resp.json()["references"])):
         referencedPaper = get_literature_keys(resp.json()["references"][ref], "new")
         all_papers, relationships = add_literature(
-            all_papers, relationships, referencedPaper
+            all_papers, relationships, availablePaper, referencedPaper
         )
 
     # loop through cited literature and get key values
@@ -190,7 +110,7 @@ for entries in range(len(bib_database.entries)):
     for ref in range(len(resp.json()["citations"])):
         cited_papers = get_literature_keys(resp.json()["citations"][ref], "new")
         all_papers, relationships = add_literature(
-            all_papers, relationships, cited_papers
+            all_papers, relationships, availablePaper, cited_papers
         )
 
 
@@ -215,8 +135,9 @@ relationships = relationships.drop(idx_delete_papers)
 
 
 # %% identify new papers of possible interest
-# interesting papers are identified by their number of occurences. The more often a paper is cited the better is
-# must be and the higher its impact on the field can be assumed
+# interesting papers are identified by their number of occurences. The more often a
+# paper is cited the better is must be and the higher its impact on the field can be
+# assumed.
 new_paper = all_papers[
     (all_papers["occurence"] >= all_papers["occurence"].quantile(0.9))
     & (all_papers["member"] == "new")
