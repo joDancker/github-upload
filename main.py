@@ -1,9 +1,9 @@
-"""Provide functions and workflow for analyzing dependencies between scientific bibliographies.
+"""Functions and workflow for analyzing dependencies between scientific bibliographies.
 
 This project gives you recommendations of which scientific papers might be
 of interest for you based on your own scientific bibliography. The idea standing behind
-the recommendations is simple. The more often a paper is cited, the more 
-important it should be for your field of research. 
+the recommendations is simple. The more often a paper is cited, the more
+important it should be for your field of research.
 
 MIT license
 
@@ -13,7 +13,6 @@ Jonte Dancker
 """
 
 import os
-import time
 import warnings
 
 import bibtexparser
@@ -21,12 +20,11 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-import requests
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
 
-from utils import add_literature, get_literature_keys
+from utils import access_API, add_literature, get_literature_keys
 
 # %%
 
@@ -66,7 +64,8 @@ for entries in range(len(bib_database.entries)):
     # get json-file of literature via DOI
     resp = access_API("https://api.semanticscholar.org/v1/paper/" + DOI)
 
-    # If user wants to exit after server is not allowing download break whole download loop
+    # If user wants to exit after server is not allowing download break
+    # whole download loop
     if resp is None:
         break
 

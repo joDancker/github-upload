@@ -1,6 +1,8 @@
 """Utility functions for the scientific-paper-dependencies project."""
+import time
 
 import pandas as pd
+import requests
 
 
 def get_literature_keys(literature, member):
@@ -15,14 +17,12 @@ def get_literature_keys(literature, member):
         bibtex-file, "new" if paper is not part of the bibtex-file or "recommendend" if
         a "new" paper might be of interest for the reader.
 
-
     Returns
     -------
     data : pd.dataframe
         contains needed key values of the paper
 
     """
-
     data = pd.DataFrame(
         {
             "paperID": literature["paperId"],
@@ -74,7 +74,6 @@ def add_literature(all_papers, relationships, current_paper, newPaper):
         each other including the additional information of `newPaper`
 
     """
-
     # add relationship between available and referenced paper
     relation = {
         "from": current_paper.loc[0, "paperID"],
@@ -95,3 +94,56 @@ def add_literature(all_papers, relationships, current_paper, newPaper):
         all_papers = pd.concat([all_papers, newPaper], ignore_index=True)
 
     return all_papers, relationships
+
+
+def access_API(url):
+    """Access semantic scholar API repeatedly with a time delay.
+
+    This function accesses the semantic scholar API via a given link and downloads the
+    meta data of a respective paper. As the semantic scholar APi denies access if too
+    many downloads per 5 minute window were tried, the function gives the user a
+    feedback. The user can either wait or exit the download loop. If the user wants to
+    wait, the functions tries to download the meta information for several times after
+    a short time delay.
+
+    Parameters
+    ----------
+    url : str
+        contains string pointing to semantic scholar API for downloading the paper's
+        metadata
+
+    Returns
+    -------
+     resp : dict
+        contains meta data of downloaded paper.
+
+    """
+    retries = 0
+    timeout = 5
+    while retries < 10:
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            return resp
+        elif resp.status_code == 403 and retries == 0:
+            # Check if server does not allow download on the first try
+            user_input = input(
+                "You exceeded 100 requests per 5 minute window. "
+                "Do you want to wait (w) or exit (e)?: "
+            )
+            # if user wants to exit reading
+            if user_input == "e":
+                return None
+            else:
+                print(f"Sleeping for {timeout} seconds")
+                time.sleep(timeout)
+                retries += 1
+
+        elif resp.status_code == 403:
+            print(f"Access denied. Sleeping for another {timeout} seconds")
+            time.sleep(timeout)
+            retries += 1
+        # If something else went wrong.
+        else:
+            print("Paper was not found in database")
+            return resp
+    return resp
