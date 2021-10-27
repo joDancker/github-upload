@@ -14,3 +14,15 @@ The code requires Python version 3.8 or higher to run properly. I recommend to r
 
 For installing the needed libraries, run:
 `pip install -r requirements.txt`
+
+# Usage
+
+All steps should be done with respect to the root directory of this repository:
+
+1. Replace the `literature.bib` file with your own file
+2. Run `python main.py`
+
+Alternatively, you may run `main.py` interactively using the IPython integration in the [VSCode editor](https://code.visualstudio.com/).
+For that, the `# %%` comments in `main.py` create "code cells" to be run one after the other.
+
+Inspect the code in `main.py` further for tweaking the program to your liking.
