@@ -238,13 +238,18 @@ for i in range(len(all_papers)):
     # extract all author names from each paper
     author_names = [x["name"] for x in all_papers.loc[all_papers.index[i], "authors"]]
     # only use first author as identifier and add year of publication
-    paper_identifier.append(
-        "".join(
-            author_names[0]
-            + "\n"
-            + str(int(all_papers.loc[all_papers.index[i], "year"]))
+    if author_names:
+        paper_identifier.append(
+            "".join(
+                author_names[0]
+                + "\n"
+                + str(int(all_papers.loc[all_papers.index[i], "year"]))
+            )
         )
-    )
+    else:
+        paper_identifier.append(
+            "".join(str(int(all_papers.loc[all_papers.index[i], "year"])))
+        )
 
 
 # set node names only for recommended papers
