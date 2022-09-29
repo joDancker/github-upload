@@ -51,15 +51,15 @@ all_papers = pd.DataFrame(
 
 # %% Add Literature Data
 
-counter_connected_papers = 0
+counter_connected_papers = 1
 # Save author, year, title and doi in dict-variable
-for entries in range(len(bib_database.entries)):
+for entries in bib_database.entries:
 
-    if "doi" not in bib_database.entries[entries]:  # IF entry does not have DOI
+    if "doi" not in entries:  # IF entry does not have DOI
         continue
 
     # get DOI from Literature
-    DOI = as_text(bib_database.entries[entries]["doi"])
+    DOI = as_text(entries["doi"])
 
     # get json-file of literature via DOI
     resp = access_API("https://api.semanticscholar.org/v1/paper/" + DOI)
@@ -74,7 +74,7 @@ for entries in range(len(bib_database.entries)):
         continue
 
     # giving user status feedback
-    print(f"Paper {entries} of {len(bib_database.entries)}")
+    print(f"Paper {counter_connected_papers} of {len(bib_database.entries)}")
 
     # another paper is added
     counter_connected_papers += 1
@@ -139,7 +139,7 @@ relationships = relationships.drop(idx_delete_papers)
 # paper is cited the better is must be and the higher its impact on the field can be
 # assumed.
 new_paper = all_papers[
-    (all_papers["occurence"] >= all_papers["occurence"].quantile(0.9))
+    (all_papers["occurence"] >= all_papers["occurence"].quantile(0.98))
     & (all_papers["member"] == "new")
 ]
 
@@ -245,6 +245,7 @@ for i in range(len(all_papers)):
             + str(int(all_papers.loc[all_papers.index[i], "year"]))
         )
     )
+
 
 # set node names only for recommended papers
 node_labels = np.where(all_papers["member"] == "recommended", paper_identifier, "")
