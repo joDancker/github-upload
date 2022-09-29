@@ -26,12 +26,13 @@ def get_literature_keys(literature, member):
     data = pd.DataFrame(
         {
             "paperID": literature["paperId"],
-            "authors": [literature["authors"]],
+            "authors": ", ".join([author["name"] for author in literature["authors"]]),
             "year": literature["year"],
             "doi": literature["doi"],
             "title": literature["title"],
             "occurence": 1,
-        }
+        },
+        index=[0],
     )
 
     # add category to paper

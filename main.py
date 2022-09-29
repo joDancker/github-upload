@@ -115,37 +115,31 @@ for entries in bib_database.entries:
 
 
 # %% Clean Data by deleting uninteresting papers (less often cited/ referenced papers)
-print(len(all_papers))
-# delete all new papers with a number of occurence that lies in the 90%-quantile
-delete_papers = all_papers[
+number_of_extracter_papers = len(all_papers)
+# delete all new papers with a number of occurence that lie below a quantile threshold
+idx_delete_papers = all_papers.index[
     (all_papers["occurence"] <= all_papers["occurence"].quantile(0.95))
     & (all_papers["member"] == "new")
 ]
-
-# delete papers
-idx_delete_papers = np.flatnonzero(all_papers["paperID"].isin(delete_papers["paperID"]))
-all_papers = all_papers.drop(idx_delete_papers)
+all_papers.drop(idx_delete_papers, inplace=True)
 
 # delete connections in graph
 idx_delete_papers = np.flatnonzero(
-    relationships["from"].isin(delete_papers["paperID"])
-    | relationships["to"].isin(delete_papers["paperID"])
+    ~relationships["from"].isin(all_papers["paperID"])
+    | ~relationships["to"].isin(all_papers["paperID"])
 )
-relationships = relationships.drop(idx_delete_papers)
+relationships.drop(idx_delete_papers, inplace=True)
 
 
 # %% identify new papers of possible interest
 # interesting papers are identified by their number of occurences. The more often a
 # paper is cited the better is must be and the higher its impact on the field can be
 # assumed.
-new_paper = all_papers[
-    (all_papers["occurence"] >= all_papers["occurence"].quantile(0.98))
-    & (all_papers["member"] == "new")
-]
-
 # change membership to recommended
 all_papers.loc[
-    all_papers["paperID"].isin(new_paper["paperID"]), "member"
+    (all_papers["occurence"] >= all_papers["occurence"].quantile(0.98))
+    & (all_papers["member"] == "new"),
+    "member",
 ] = "recommended"
 
 
@@ -155,24 +149,18 @@ print(
     "papers from bibtex-file were added to graph. \n"
 )
 print(
-    f"{len(all_papers)} of {len(all_papers)+len(delete_papers)}"
+    f"{len(all_papers)} of {len(all_papers)+number_of_extracter_papers} "
     "extracted papers (cited and referenced) are shown in graph. \n"
 )
-print(f"The following {len(new_paper)} papers might be of interest: \n")
+print(
+    f"The following {sum(all_papers['member']=='recommended')} "
+    "papers might be of interest: \n"
+)
 
-
-papers = []
-for i in range(len(new_paper)):
-    # extract all author names from each paper
-    author_names = [x["name"] for x in new_paper.loc[new_paper.index[i], "authors"]]
-    # only use first author as identifier and add year of publication
-    papers.append("".join(author_names[0]))
-
-recommended_papers = pd.DataFrame()
-recommended_papers["ID"] = papers
-recommended_papers["year"] = new_paper["year"].values
-recommended_papers["doi"] = new_paper["doi"].values
-recommended_papers["title"] = new_paper["title"].values
+recommended_papers = all_papers.loc[
+    all_papers["member"] == "recommended",
+    ["authors", "year", "doi", "title", "occurence"],
+]
 
 print(recommended_papers)
 
@@ -230,26 +218,13 @@ nx.draw(
     cmap=colors,
 )
 
-
-# identfiy papers in plot by name of first author and year of publication
-paper_identifier = []
-all_papers["year"] = all_papers["year"].fillna(0)
-for i in range(len(all_papers)):
-    # extract all author names from each paper
-    author_names = [x["name"] for x in all_papers.loc[all_papers.index[i], "authors"]]
-    # only use first author as identifier and add year of publication
-    if author_names:
-        paper_identifier.append(
-            "".join(
-                author_names[0]
-                + "\n"
-                + str(int(all_papers.loc[all_papers.index[i], "year"]))
-            )
-        )
-    else:
-        paper_identifier.append(
-            "".join(str(int(all_papers.loc[all_papers.index[i], "year"])))
-        )
+# identfy papers in plot by name of first author and year of publication
+all_papers.loc[all_papers["authors"] == "", "authors"] = "X X"
+all_papers.loc[all_papers["authors"] == "", "authors"] = 0
+paper_identifier = [
+    " ".join([author.split()[1], str(int(year))])
+    for author, year in zip(all_papers["authors"], all_papers["year"])
+]
 
 
 # set node names only for recommended papers
