@@ -28,7 +28,7 @@ from utils import access_API, add_literature, get_literature_keys
 # %% General parameters
 bibliography_source = "literature.bib"
 cleaning_quantile = 0.99
-recommendation_quantile = 0.95
+recommendation_quantile = 0.9
 
 save_filename = "dependency"
 save_overwrite = True
@@ -186,18 +186,14 @@ if not os.path.exists(fname) or save_overwrite:
 else:
     warnings.warn(
         f"Not saving to {save_filename}, that file already exists and "
-        "overwrite is {save_overwrite}."
+        f"overwrite is {save_overwrite}."
     )
 
 # %% PLOTTING
-# Draw graph
-# Set source and target nodes
-source = relationships["from"]
-target = relationships["to"]
-weight = np.ones(len(relationships))
-
 # Create adjacency matrix
-adjmat = vec2adjmat(source, target, weight=weight)
+adjmat = vec2adjmat(
+    relationships["from"], relationships["to"], weight=np.ones(len(relationships))
+)
 
 # assign colors to nodes
 colors = ["#a9a9a9", "#1e90ff", "#ff8c00"]  # ["darkgray", "dodgerblue", "darkorange"]
@@ -208,8 +204,10 @@ node_colors = np.select(condition, colors[1:], default=colors[0])
 # number of occurence has always the same size independently of its number of occurence
 maxValue = all_papers["occurence"].max()
 minValue = all_papers["occurence"].min()
-sizingFactor = 3 / (maxValue - minValue)
-nodeSize = np.ceil((all_papers["occurence"] - minValue + 1) * sizingFactor).tolist()
+sizingFactor = 100 / (maxValue - minValue)
+nodeSize = np.ceil(
+    (all_papers["occurence"].values - minValue) * sizingFactor + 1
+).tolist()
 
 # label papers by name of first author and year of publication
 all_papers.loc[all_papers["authors"] == "", "authors"] = "X X"
@@ -233,7 +231,7 @@ tooltip = (
 tooltip = tooltip.values
 
 # Initialize and build force-directed graph
-d3 = d3graph()
+d3 = d3graph(charge=300)
 d3.graph(adjmat)
 
 # Set node and edge properties
@@ -249,5 +247,5 @@ else:
     d3.show()
     warnings.warn(
         f"Not saving to {save_filename}, that file already exists and "
-        "overwrite is {save_overwrite}."
+        f"overwrite is {save_overwrite}."
     )
