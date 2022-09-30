@@ -16,13 +16,12 @@ import os
 import warnings
 
 import bibtexparser
-import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 import pandas as pd
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import homogenize_latex_encoding
+from d3graph import d3graph, vec2adjmat
 
 from utils import access_API, add_literature, get_literature_keys
 
@@ -130,6 +129,13 @@ idx_delete_papers = np.flatnonzero(
 )
 relationships.drop(idx_delete_papers, inplace=True)
 
+# remove paper without connections
+idx_delete_papers = all_papers.index[
+    ~all_papers["paperID"].isin(relationships["from"])
+    & ~all_papers["paperID"].isin(relationships["to"])
+]
+all_papers.drop(idx_delete_papers, inplace=True)
+
 
 # %% identify new papers of possible interest
 # interesting papers are identified by their number of occurences. The more often a
@@ -166,7 +172,7 @@ print(recommended_papers)
 
 # save list of recommended papers
 fname = "recommended_papers.csv"
-overwrite = False
+overwrite = True
 if not os.path.exists(fname) or overwrite:
     recommended_papers.to_csv(fname, index=False, float_format="%.2f")
 else:
@@ -174,78 +180,65 @@ else:
         f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
     )
 
-
 # %% PLOTTING
-# Create graph
-G = nx.DiGraph()
-G.add_nodes_from(all_papers["paperID"])
-G.add_edges_from(list(relationships.itertuples(index=False, name=None)))
-# G = nx.from_pandas_edgelist(relationships, 'from', 'to', create_using=nx.DiGraph())
+# Draw graph
+# Set source and target nodes
+source = relationships["from"]
+target = relationships["to"]
+weight = np.ones(len(relationships))
 
-# Specify colors
-colors = ["darkgray", "dodgerblue", "darkorange"]
-
-# specify labels according to color
-# with this the color labels can be different from the node names
-ColorLegend = {"new": 0, "owned": 1, "recommended": 2}
+# Create adjacency matrix
+adjmat = vec2adjmat(source, target, weight=weight)
 
 # assign colors to nodes
+colors = ["#a9a9a9", "#1e90ff", "#ff8c00"]  # ["darkgray", "dodgerblue", "darkorange"]
 condition = [(all_papers["member"] == "owned"), (all_papers["member"] == "recommended")]
 node_colors = np.select(condition, colors[1:], default=colors[0])
-
-# Using a figure to use it as a parameter when calling nx.draw_networkx
-fig, ax = plt.subplots()
-for label in ColorLegend:
-    ax.plot([0], [0], color=colors[ColorLegend[label]], label=label)
-
 
 # Set node size by number of occurences in a variable manner so that paper with maximum
 # number of occurence has always the same size independently of its number of occurence
 maxValue = all_papers["occurence"].max()
 minValue = all_papers["occurence"].min()
-sizingFactor = 100 / (maxValue - minValue)
+sizingFactor = 10 / (maxValue - minValue)
 nodeSize = np.ceil((all_papers["occurence"] - minValue + 1) * sizingFactor).tolist()
 
-# Draw graph
-position = nx.spring_layout(G)
-nx.draw(
-    G,
-    pos=position,
-    width=0.5,
-    node_size=nodeSize,
-    node_color=node_colors,
-    edge_color="gray",
-    cmap=colors,
-)
-
-# identfy papers in plot by name of first author and year of publication
+# label papers by name of first author and year of publication
 all_papers.loc[all_papers["authors"] == "", "authors"] = "X X"
-all_papers.loc[all_papers["authors"] == "", "authors"] = 0
-paper_identifier = [
+all_papers["year"].fillna(0, inplace=True)
+nodel_labels = [
     " ".join([author.split()[1], str(int(year))])
     for author, year in zip(all_papers["authors"], all_papers["year"])
 ]
 
+# information of pop up window for each paper
+tooltip = (
+    "Authors: "
+    + all_papers["authors"]
+    + "\nYear: "
+    + all_papers["year"].astype(int).astype(str)
+    + "\nTitle: "
+    + all_papers["title"]
+    + "\nOccurences: "
+    + all_papers["occurence"].astype(int).astype(str)
+)
+tooltip = tooltip.values
 
-# set node names only for recommended papers
-node_labels = np.where(all_papers["member"] == "recommended", paper_identifier, "")
-labels = dict(zip(all_papers["paperID"], node_labels))
+# Initialize and build force-directed graph
+d3 = d3graph()
+d3.graph(adjmat)
 
-# Now only add labels to the nodes you require
-nx.draw_networkx_labels(G, position, labels, font_size=12)
+# Set node and edge properties
+d3.set_node_properties(
+    color=node_colors, size=nodeSize, label=nodel_labels, tooltip=tooltip
+)
 
-# plot legend
-ax.legend()
-
-# save plot
-fname = "paper_connections.png"
-overwrite = False
+# show plot
+fname = "paper_connections.html"
+overwrite = True
 if not os.path.exists(fname) or overwrite:
-    fig.savefig(fname)
+    d3.show(filepath=os.path.join(os.path.abspath(os.getcwd()), fname))
 else:
+    d3.show()
     warnings.warn(
         f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
     )
-
-# show plot
-plt.show()

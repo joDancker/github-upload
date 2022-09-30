@@ -1,11 +1,11 @@
 bibtexparser
 black
+d3graph
 flake8
 flake8-docstrings
 isort
-matplotlib
-networkx
 pandas
 pre-commit
 requests
 scipy
+seaborn
