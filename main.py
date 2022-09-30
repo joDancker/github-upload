@@ -25,14 +25,20 @@ from d3graph import d3graph, vec2adjmat
 
 from utils import access_API, add_literature, get_literature_keys
 
-# %%
+# %% General parameters
+bibliography_source = "literature.bib"
+cleaning_quantile = 0.99
+recommendation_quantile = 0.95
 
-# read data from bib-file
-with open("literature.bib") as bibtex_file:
+save_filename = "dependency"
+save_overwrite = True
+
+
+# %% Import data from bib-file
+with open(bibliography_source) as bibtex_file:
     parser = BibTexParser()
     parser.customization = homogenize_latex_encoding
     bib_database = bibtexparser.load(bibtex_file, parser=parser)
-
 
 # relationship / connections between papers
 relationships = pd.DataFrame({"from": [], "to": []})
@@ -117,7 +123,7 @@ for entries in bib_database.entries:
 number_of_extracter_papers = len(all_papers)
 # delete all new papers with a number of occurence that lie below a quantile threshold
 idx_delete_papers = all_papers.index[
-    (all_papers["occurence"] <= all_papers["occurence"].quantile(0.95))
+    (all_papers["occurence"] <= all_papers["occurence"].quantile(cleaning_quantile))
     & (all_papers["member"] == "new")
 ]
 all_papers.drop(idx_delete_papers, inplace=True)
@@ -143,7 +149,10 @@ all_papers.drop(idx_delete_papers, inplace=True)
 # assumed.
 # change membership to recommended
 all_papers.loc[
-    (all_papers["occurence"] >= all_papers["occurence"].quantile(0.98))
+    (
+        all_papers["occurence"]
+        >= all_papers["occurence"].quantile(recommendation_quantile)
+    )
     & (all_papers["member"] == "new"),
     "member",
 ] = "recommended"
@@ -171,13 +180,13 @@ recommended_papers = all_papers.loc[
 print(recommended_papers)
 
 # save list of recommended papers
-fname = "recommended_papers.csv"
-overwrite = True
-if not os.path.exists(fname) or overwrite:
+fname = "_".join([save_filename, "recommendation.csv"])
+if not os.path.exists(fname) or save_overwrite:
     recommended_papers.to_csv(fname, index=False, float_format="%.2f")
 else:
     warnings.warn(
-        f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
+        f"Not saving to {save_filename}, that file already exists and "
+        "overwrite is {save_overwrite}."
     )
 
 # %% PLOTTING
@@ -199,7 +208,7 @@ node_colors = np.select(condition, colors[1:], default=colors[0])
 # number of occurence has always the same size independently of its number of occurence
 maxValue = all_papers["occurence"].max()
 minValue = all_papers["occurence"].min()
-sizingFactor = 10 / (maxValue - minValue)
+sizingFactor = 3 / (maxValue - minValue)
 nodeSize = np.ceil((all_papers["occurence"] - minValue + 1) * sizingFactor).tolist()
 
 # label papers by name of first author and year of publication
@@ -233,12 +242,12 @@ d3.set_node_properties(
 )
 
 # show plot
-fname = "paper_connections.html"
-overwrite = True
-if not os.path.exists(fname) or overwrite:
+fname = "_".join([save_filename, "plot.html"])
+if not os.path.exists(fname) or save_overwrite:
     d3.show(filepath=os.path.join(os.path.abspath(os.getcwd()), fname))
 else:
     d3.show()
     warnings.warn(
-        f"Not saving to {fname}, that file already exists and overwrite is {overwrite}."
+        f"Not saving to {save_filename}, that file already exists and "
+        "overwrite is {save_overwrite}."
     )
